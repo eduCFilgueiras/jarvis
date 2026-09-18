@@ -1,0 +1,37 @@
+from .base import AgentContext, BaseAgent
+from src.router import IntentRouter
+
+
+class GeneralAgent(BaseAgent):
+    def __init__(self, intent_router: IntentRouter | None = None) -> None:
+        self._intent_router = intent_router or IntentRouter()
+
+    async def execute(self, message: str, context: AgentContext) -> str:
+        intent = self._intent_router.route(message)
+
+        if intent.name == "history":
+            return self._format_history(context)
+
+        if intent.name == "tool" and intent.tool_name is not None:
+            tool = context.tools.get(intent.tool_name)
+
+            if tool is not None:
+                try:
+                    return await tool(message)
+                except ValueError as error:
+                    return f"Erro na ferramenta {intent.tool_name}: {error}"
+
+        return await context.model_provider.generate(message, context.history.all())
+
+    def _format_history(self, context: AgentContext) -> str:
+        previous_user_messages = [
+            message.content
+            for message in context.history.all()[:-1]
+            if message.role == "user"
+        ]
+
+        if not previous_user_messages:
+            return "Ainda nao tenho mensagens anteriores nesta conversa."
+
+        summary = "; ".join(previous_user_messages[-5:])
+        return f"Voce perguntou antes: {summary}."

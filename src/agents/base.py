@@ -1,0 +1,19 @@
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+
+from src.memory import ConversationHistory
+from src.models import ModelProvider
+from src.tools import ToolRegistry
+
+
+@dataclass(frozen=True)
+class AgentContext:
+    tools: ToolRegistry
+    history: ConversationHistory
+    model_provider: ModelProvider
+
+
+class BaseAgent(ABC):
+    @abstractmethod
+    async def execute(self, message: str, context: AgentContext) -> str:
+        raise NotImplementedError
