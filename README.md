@@ -63,6 +63,7 @@ main.py
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Commands](docs/COMMANDS.md)
+- [Environments](docs/ENVIRONMENTS.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Changelog](CHANGELOG.md)
 

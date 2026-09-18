@@ -15,10 +15,10 @@ Jarvis is a local, modular CLI assistant with:
 ## Near-Term
 
 1. Add real OpenAI activation flow.
-2. Add `.env` loading or explicit environment setup helper.
-3. Add safer permission prompts for sensitive tools.
-4. Add a write-capable files tool behind confirmation.
-5. Add a plugin-style loader for external tools and agents.
+2. Add safer permission prompts for sensitive tools.
+3. Add a write-capable files tool behind confirmation.
+4. Add a plugin-style loader for external tools and agents.
+5. Add GitHub Issues/Projects workflow for task tracking.
 
 ## Mid-Term
 

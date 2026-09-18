@@ -1,7 +1,11 @@
 import asyncio
 
-from src.core.jarvis import jarvis, process_message
+from src.core.env import load_env
 from src.interfaces import CliSession, run_cli
+
+load_env()
+
+from src.core.jarvis import jarvis, process_message  # noqa: E402
 
 
 async def main() -> None:

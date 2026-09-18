@@ -144,8 +144,8 @@ class CliTests(unittest.IsolatedAsyncioTestCase):
             await run_cli(fake_process_message, session=create_test_session())
 
         print_mock.assert_any_call(
-            "Jarvis: Config: assistant_name=Jarvis, version=0.1.0, language=pt-BR, "
-            "debug=True, timezone=local, history_limit=5, "
+            "Jarvis: Config: assistant_name=Jarvis, version=0.1.0, "
+            "environment=local, language=pt-BR, debug=True, timezone=local, history_limit=5, "
             "history_path=data/history.json, export_path=data/session.md."
         )
 
@@ -162,8 +162,8 @@ class CliTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(session.config.debug)
         print_mock.assert_any_call("Jarvis: Debug desativado.")
         print_mock.assert_any_call(
-            "Jarvis: Config: assistant_name=Jarvis, version=0.1.0, language=pt-BR, "
-            "debug=False, timezone=local, history_limit=5, "
+            "Jarvis: Config: assistant_name=Jarvis, version=0.1.0, "
+            "environment=local, language=pt-BR, debug=False, timezone=local, history_limit=5, "
             "history_path=data/history.json, export_path=data/session.md."
         )
 
