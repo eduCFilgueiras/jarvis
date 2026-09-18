@@ -133,6 +133,7 @@ class CommandRouterTests(unittest.TestCase):
 
         self.assertIn("Jarvis: Diagnostico:", response)
         self.assertIn("- version: 0.1.0", response)
+        self.assertIn("- environment: local", response)
         self.assertIn("- agents: dev, general", response)
         self.assertIn("- tools: calculator, datetime, files, notes, todo", response)
         self.assertIn("- model_active: mock", response)

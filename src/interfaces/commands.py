@@ -129,6 +129,7 @@ class CommandRouter:
             "Jarvis: Config: "
             f"assistant_name={config.assistant_name}, "
             f"version={config.version}, "
+            f"environment={config.environment}, "
             f"language={config.language}, "
             f"debug={config.debug}, "
             f"timezone={config.timezone}, "
@@ -146,6 +147,7 @@ class CommandRouter:
         return (
             "Jarvis: Diagnostico:\n"
             f"- version: {self._session.config.version}\n"
+            f"- environment: {self._session.config.environment}\n"
             f"- agents: {', '.join(self._session.agents.names())}\n"
             f"- tools: {', '.join(self._session.tools.names())}\n"
             f"- model_active: {self._session.model_provider.name}\n"

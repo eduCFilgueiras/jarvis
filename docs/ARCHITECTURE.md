@@ -81,3 +81,13 @@ History can also be saved and loaded through:
 - `/carregar`
 
 The default history path is `data/history.json`.
+
+## Environments
+
+`main.py` loads `.env` before creating the runtime `Jarvis` instance.
+
+Supported reference files:
+
+- `.env.example`
+- `.env.hml.example`
+- `.env.prd.example`

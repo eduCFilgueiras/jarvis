@@ -63,6 +63,8 @@ main.py
 
 - [Architecture](docs/ARCHITECTURE.md)
 - [Commands](docs/COMMANDS.md)
+- [Environments](docs/ENVIRONMENTS.md)
+- [GitHub Workflow](docs/GITHUB_WORKFLOW.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Changelog](CHANGELOG.md)
 

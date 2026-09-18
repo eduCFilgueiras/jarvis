@@ -23,4 +23,5 @@ Added:
 - Permission policy primitives for tool safety.
 - Optional OpenAI dependency group in `pyproject.toml`.
 - `.env.example`.
+- `.env` loader and local/HML/PRD environment examples.
 - Unit test suite.
