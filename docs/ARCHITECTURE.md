@@ -27,6 +27,7 @@ main.py
 - `tools`: contains local deterministic capabilities.
 - `models`: contains the model-provider abstraction and model registry.
 - `memory`: contains in-session history and JSON persistence.
+- `security`: contains permission policy primitives.
 
 ## Agents
 
@@ -50,6 +51,16 @@ Current tools:
 - `todo`
 
 Tools are registered in `ToolRegistry` and invoked by name.
+
+## Security
+
+`PermissionPolicy` provides the first permission layer for tools.
+
+Current behavior:
+
+- read-only actions are auto-allowed by default.
+- non-read-only actions are denied by default.
+- the `files` tool is checked through the policy before execution.
 
 ## Models
 

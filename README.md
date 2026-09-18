@@ -11,6 +11,7 @@ The current Python implementation keeps the architecture split into:
 - `models`: model provider abstraction
 - `memory`: in-session conversation history
 - `interfaces`: CLI and internal commands
+- `security`: permission policy primitives
 
 ## Run
 

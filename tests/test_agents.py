@@ -6,16 +6,26 @@ from src.agents.dev import DevAgent
 from src.agents.general import GeneralAgent
 from src.memory import ConversationHistory
 from src.models import MockModelProvider
-from src.tools import CalculatorTool, DateTimeTool, TodoTool, ToolRegistry
+from src.security import PermissionPolicy
+from src.tools import CalculatorTool, DateTimeTool, FilesTool, TodoTool, ToolRegistry
+
+
+def create_context(
+    tools: ToolRegistry | None = None,
+    history: ConversationHistory | None = None,
+    permissions: PermissionPolicy | None = None,
+) -> AgentContext:
+    return AgentContext(
+        tools=tools or ToolRegistry(),
+        history=history or ConversationHistory(),
+        model_provider=MockModelProvider(),
+        permissions=permissions or PermissionPolicy(),
+    )
 
 
 class AgentTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self) -> None:
-        self.context = AgentContext(
-            tools=ToolRegistry(),
-            history=ConversationHistory(),
-            model_provider=MockModelProvider(),
-        )
+        self.context = create_context()
 
     async def test_dev_agent_response(self) -> None:
         response = await DevAgent().execute("corrigir bug", self.context)
@@ -36,11 +46,7 @@ class AgentTests(unittest.IsolatedAsyncioTestCase):
         tools = ToolRegistry()
         tool = DateTimeTool(clock=lambda: datetime(2026, 9, 18, 14, 30))
         tools.register("datetime", tool.execute)
-        context = AgentContext(
-            tools=tools,
-            history=ConversationHistory(),
-            model_provider=MockModelProvider(),
-        )
+        context = create_context(tools=tools)
 
         response = await GeneralAgent().execute("que horas sao?", context)
 
@@ -50,11 +56,7 @@ class AgentTests(unittest.IsolatedAsyncioTestCase):
         tools = ToolRegistry()
         tool = CalculatorTool()
         tools.register("calculator", tool.execute)
-        context = AgentContext(
-            tools=tools,
-            history=ConversationHistory(),
-            model_provider=MockModelProvider(),
-        )
+        context = create_context(tools=tools)
 
         response = await GeneralAgent().execute("calcule 2 + 2", context)
 
@@ -64,11 +66,7 @@ class AgentTests(unittest.IsolatedAsyncioTestCase):
         tools = ToolRegistry()
         tool = TodoTool()
         tools.register("todo", tool.execute)
-        context = AgentContext(
-            tools=tools,
-            history=ConversationHistory(),
-            model_provider=MockModelProvider(),
-        )
+        context = create_context(tools=tools)
 
         response = await GeneralAgent().execute("criar tarefa", context)
 
@@ -81,12 +79,24 @@ class AgentTests(unittest.IsolatedAsyncioTestCase):
         history.add_user_message("calcule 2 + 2")
         history.add_assistant_message("O resultado e 4.")
         history.add_user_message("o que eu perguntei antes?")
-        context = AgentContext(
-            tools=ToolRegistry(),
-            history=history,
-            model_provider=MockModelProvider(),
-        )
+        context = create_context(history=history)
 
         response = await GeneralAgent().execute("o que eu perguntei antes?", context)
 
         self.assertEqual(response, "Voce perguntou antes: bom dia; calcule 2 + 2.")
+
+    async def test_general_agent_denies_files_when_policy_requires_permission(self) -> None:
+        tools = ToolRegistry()
+        tool = FilesTool()
+        tools.register("files", tool.execute)
+        context = create_context(
+            tools=tools,
+            permissions=PermissionPolicy(auto_allow_read_only=False),
+        )
+
+        response = await GeneralAgent().execute("listar arquivos", context)
+
+        self.assertEqual(
+            response,
+            "Permissao negada: Permissao necessaria para files.list em listar arquivos.",
+        )

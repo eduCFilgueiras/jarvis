@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from src.memory import ConversationHistory
 from src.models import ModelProvider
+from src.security import PermissionPolicy
 from src.tools import ToolRegistry
 
 
@@ -11,6 +12,7 @@ class AgentContext:
     tools: ToolRegistry
     history: ConversationHistory
     model_provider: ModelProvider
+    permissions: PermissionPolicy
 
 
 class BaseAgent(ABC):

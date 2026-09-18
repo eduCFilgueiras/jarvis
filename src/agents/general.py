@@ -1,5 +1,6 @@
 from .base import AgentContext, BaseAgent
 from src.router import IntentRouter
+from src.security import PermissionRequest
 
 
 class GeneralAgent(BaseAgent):
@@ -13,6 +14,15 @@ class GeneralAgent(BaseAgent):
             return self._format_history(context)
 
         if intent.name == "tool" and intent.tool_name is not None:
+            permission_response = self._check_tool_permission(
+                intent.tool_name,
+                message,
+                context,
+            )
+
+            if permission_response is not None:
+                return permission_response
+
             tool = context.tools.get(intent.tool_name)
 
             if tool is not None:
@@ -22,6 +32,28 @@ class GeneralAgent(BaseAgent):
                     return f"Erro na ferramenta {intent.tool_name}: {error}"
 
         return await context.model_provider.generate(message, context.history.all())
+
+    def _check_tool_permission(
+        self,
+        tool_name: str,
+        message: str,
+        context: AgentContext,
+    ) -> str | None:
+        if tool_name != "files":
+            return None
+
+        action = "read" if message.lower().strip().startswith("ler arquivo") else "list"
+        request = PermissionRequest(
+            tool_name=tool_name,
+            action=action,
+            resource=message,
+        )
+        decision = context.permissions.check(request)
+
+        if decision.allowed:
+            return None
+
+        return f"Permissao negada: {decision.reason}"
 
     def _format_history(self, context: AgentContext) -> str:
         previous_user_messages = [

@@ -20,6 +20,7 @@ Added:
 - Optional OpenAI model provider.
 - Model registry and runtime model switching.
 - CLI commands for help, history, status, config, version, diagnostics, model switching, debug, save/load, and export.
+- Permission policy primitives for tool safety.
 - Optional OpenAI dependency group in `pyproject.toml`.
 - `.env.example`.
 - Unit test suite.
