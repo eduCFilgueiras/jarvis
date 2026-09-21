@@ -129,6 +129,9 @@ by the CLI automatically.
 `ContinuousVoiceLoop` provides explicit continuous mode with a configurable
 turn limit and stop phrases (`sair`, `parar`, `encerrar`).
 
+The loop defaults to three turns, stops after an empty capture, and avoids
+sending silent WAV captures to STT to control API cost.
+
 `AudioInput` and `AudioOutput` isolate device access. Mock devices are used by
 default in tests; `MacAudioInput` and `MacAudioOutput` use optional
 `sounddevice`/`numpy` adapters when installed.
