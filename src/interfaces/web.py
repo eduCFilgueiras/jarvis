@@ -1,5 +1,6 @@
 import asyncio
 import json
+import os
 from time import perf_counter
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Event, Lock, Thread
@@ -136,6 +137,11 @@ class ControlServer:
             def _process(self, message: str) -> None:
                 started = perf_counter()
                 async def run() -> None:
+                    if control.state.cancel.is_set():
+                        return
+                    delay = max(0.0, float(os.environ.get("JARVIS_TEST_DELAY", "0")))
+                    if delay:
+                        await asyncio.sleep(delay)
                     if control.state.cancel.is_set():
                         return
                     response = await control.jarvis.process_message(message)
