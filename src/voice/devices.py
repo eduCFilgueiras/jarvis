@@ -65,7 +65,7 @@ class MacAudioOutput:
             raise RuntimeError("Instale sounddevice e numpy para reproduzir audio no macOS.") from error
         samples = np.frombuffer(audio, dtype="int16")
         await asyncio.to_thread(
-            sd.play, samples, self.sample_rate, channels=self.channels
+            sd.play, samples, self.sample_rate
         )
         await asyncio.to_thread(sd.wait)
 
