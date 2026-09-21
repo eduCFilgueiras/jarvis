@@ -7,7 +7,7 @@ from src.agents.dev_planner import DevPlanner
 from src.agents.general import GeneralAgent
 from src.memory import ConversationHistory
 from src.models import MockModelProvider
-from src.security import PermissionPolicy
+from src.security import PermissionPolicy, PermissionRequest
 from src.tools import CalculatorTool, DateTimeTool, FilesTool, TodoTool, ToolRegistry
 
 
@@ -33,6 +33,17 @@ class AgentTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertIn('[DEV] Tarefa: "corrigir bug"', response)
         self.assertIn("Autorizacao necessaria", response)
+
+    async def test_dev_agent_returns_preview_after_grant(self) -> None:
+        self.context.permissions.check(
+            PermissionRequest("dev", "write", "corrigir bug")
+        )
+        self.context.permissions.grant_pending()
+
+        response = await DevAgent().execute("corrigir bug", self.context)
+
+        self.assertIn("Execucao simulada", response)
+        self.assertIn("Nenhum arquivo ou comando foi alterado", response)
 
     def test_dev_planner_creates_five_step_plan(self) -> None:
         plan = DevPlanner().create_plan("corrigir bug")

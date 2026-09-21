@@ -38,6 +38,9 @@ main.py
 The development agent now creates a five-step plan from the project context and
 requests authorization before any future write executor is added.
 
+After authorization, `DevExecutor` currently produces a dry-run preview only;
+it does not invoke shell commands or modify files.
+
 Agents receive an `AgentContext` containing:
 
 - `tools`
