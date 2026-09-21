@@ -103,6 +103,9 @@ History can also be saved and loaded through:
 text-to-speech. The current adapters are mocks for testing; real audio
 providers can be added without changing the orchestrator.
 
+Optional OpenAI STT/TTS adapters are available, but remain inactive unless
+selected in configuration and provided with `OPENAI_API_KEY`.
+
 `VoiceSession` models `IDLE`, `LISTENING`, `SPEAKING`, and `INTERRUPTED`
 states so a future audio adapter can implement barge-in without coupling it
 to Jarvis core.
