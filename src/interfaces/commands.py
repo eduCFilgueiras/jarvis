@@ -6,6 +6,7 @@ from src.agents import AgentRegistry
 from src.core.config import JarvisConfig
 from src.memory import ConversationHistory, HistoryStorage
 from src.models import ModelProvider
+from src.security import PermissionPolicy
 from src.tools import ToolRegistry
 
 EXIT_COMMANDS = {"sair", "exit", "quit", "q"}
@@ -19,6 +20,7 @@ class CliSession:
     history: ConversationHistory
     model_provider: ModelProvider
     config: JarvisConfig
+    permissions: PermissionPolicy | None = None
 
 
 @dataclass(frozen=True)

@@ -30,3 +30,22 @@ async def run_cli(
 
         response = await process_message(message)
         print(f"Jarvis: {response}")
+
+        if session is None or session.permissions is None:
+            continue
+
+        request = session.permissions.pending_request
+        if request is None:
+            continue
+
+        answer = input(
+            f"Jarvis: Permitir {request.tool_name}.{request.action} em "
+            f"{request.resource}? [s/N] "
+        ).strip().lower()
+
+        if answer in {"s", "sim", "y", "yes"}:
+            session.permissions.grant_pending()
+            response = await process_message(message)
+            print(f"Jarvis: {response}")
+        else:
+            session.permissions.deny_pending()
