@@ -129,6 +129,10 @@ by the CLI automatically.
 `ContinuousVoiceLoop` provides explicit continuous mode with a configurable
 turn limit and stop phrases (`sair`, `parar`, `encerrar`).
 
+`web_main.py` exposes a local control panel at `http://127.0.0.1:8000` with
+status, transcript, response, events, send, and stop controls. It uses only
+the Python standard library.
+
 The loop defaults to three turns, stops after an empty capture, and avoids
 sending silent WAV captures to STT to control API cost.
 
