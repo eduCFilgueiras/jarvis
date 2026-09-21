@@ -8,6 +8,7 @@ from urllib.parse import urlparse
 
 from src.core.jarvis import Jarvis
 from src.router.router import route
+from src.voice import MacAudioInput, MacAudioOutput, VoiceRuntime
 
 
 class ControlState:
@@ -133,6 +134,14 @@ class ControlServer:
                     Thread(target=self._process_voice_mock, args=(transcript,), daemon=True).start()
                     self._json({"ok": True})
                     return
+                if path == "/api/voice/record":
+                    if not control.state.begin("[gravacao de voz]", "general", "voice"):
+                        self._json({"error": "Ja existe uma execucao em andamento."}, 409)
+                        return
+                    control.state.voice_status = "listening"
+                    Thread(target=self._process_voice_recording, daemon=True).start()
+                    self._json({"ok": True})
+                    return
                 if path != "/api/process":
                     self.send_error(404)
                     return
@@ -177,6 +186,34 @@ class ControlServer:
                 if control.state.snapshot()["status"] == "idle":
                     control.state.voice_status = "idle"
 
+            def _process_voice_recording(self) -> None:
+                started = perf_counter()
+
+                async def run() -> None:
+                    runtime = VoiceRuntime(
+                        MacAudioInput(seconds=5),
+                        MacAudioOutput(),
+                        control.jarvis.process_message,
+                    )
+                    result = await runtime.run_once()
+                    if control.state.cancel.is_set():
+                        return
+                    with control.state.lock:
+                        control.state.transcript = result.transcript
+                        control.state.response = result.response
+                        control.state.history[-1] = {"role": "user", "content": result.transcript}
+                        control.state.history.append({"role": "assistant", "content": result.response})
+                        control.state.duration_ms = round((perf_counter() - started) * 1000, 1)
+                        control.state.voice_status = "idle"
+                        control.state.status = "idle"
+                        control.state.events.append("Voz concluida")
+
+                try:
+                    asyncio.run(run())
+                except Exception as error:
+                    control.state.update("error", f"Erro de voz: {error}")
+                    control.state.voice_status = "idle"
+
             def _json(self, payload: dict[str, object], status: int = 200) -> None:
                 body = json.dumps(payload, ensure_ascii=False).encode()
                 self.send_response(status)
@@ -202,5 +239,5 @@ class ControlServer:
 _PAGE = """<!doctype html><html lang="pt-BR"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Jarvis Control</title>
 <style>body{font:16px system-ui;margin:0;background:#101418;color:#edf2f7}main{max-width:860px;margin:auto;padding:28px}.panel{border:1px solid #33404d;border-radius:8px;padding:16px;margin:14px 0;background:#171d23}textarea{width:100%;box-sizing:border-box;background:#0d1115;color:white;padding:10px;border:1px solid #465563;border-radius:6px;font:inherit}button{padding:10px 16px;border:0;border-radius:6px;background:#3c8df6;color:white;font:inherit;margin:10px 8px 0 0}.stop{background:#bd3e4d}.value{white-space:pre-wrap;min-height:48px}.events{white-space:pre-wrap;font:13px monospace;color:#aab6c2}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:650px){.grid{grid-template-columns:1fr}}</style>
-<main><h1>Jarvis Control</h1><p>Painel local de observabilidade</p><div class="panel"><b>Status: </b><span id="status">idle</span><div id="metrics" class="events">Rota: - | Provider: - | Tempo: -</div><div id="voice-status" class="events">Voz: idle</div><br><button id="send-button" type="button">Enviar</button><button id="voice-button" type="button">Voz mock</button><button id="stop-button" type="button" class="stop">Parar</button><button id="clear-button" type="button">Limpar conversa</button><textarea id="message" rows="3" placeholder="Mensagem para o Jarvis"></textarea></div><div class="panel"><h3>Conversa</h3><div id="history" class="value">Nenhuma mensagem ainda.</div></div><div class="grid"><div class="panel"><h3>Transcricao</h3><div id="transcript" class="value">-</div></div><div class="panel"><h3>Resposta</h3><div id="response" class="value">-</div></div></div><div class="panel"><h3>Eventos</h3><div id="events" class="events">-</div></div></main>
-<script>const $=id=>document.getElementById(id);function showError(error){$('events').textContent='Erro no painel: '+error;}$('send-button')?.addEventListener('click',sendMessage);$('voice-button')?.addEventListener('click',sendVoice);$('stop-button')?.addEventListener('click',stopRun);$('clear-button')?.addEventListener('click',clearConversation);async function sendMessage(){const message=$('message').value.trim();if(!message)return;await post('/api/process',{message})}$('message')?.addEventListener('keydown',event=>{if(event.key==='Enter'&&(event.metaKey||event.ctrlKey)){event.preventDefault();sendMessage()}});async function sendVoice(){const transcript=$('message').value.trim();if(!transcript)return;await post('/api/voice/mock',{transcript})}async function post(url,payload){try{const result=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!result.ok)showError((await result.json()).error||'Falha ao processar');$('message').value='';await refresh()}catch(error){showError(error)}}async function stopRun(){try{await fetch('/api/stop',{method:'POST'});await refresh()}catch(error){showError(error)}}async function clearConversation(){try{await fetch('/api/clear',{method:'POST'});await refresh()}catch(error){showError(error)}}async function refresh(){try{const response=await fetch('/api/status',{cache:'no-store'});const state=await response.json();for(const key of ['status','transcript','response','events'])$(key).textContent=key==='events'?state[key].join('\\n')||'-':state[key]||'-';$('history').textContent=state.history?.map(turn=>`${turn.role==='user'?'Voce':'Jarvis'}: ${turn.content}`).join('\\n\\n')||'Nenhuma mensagem ainda.';$('metrics').textContent=`Rota: ${state.route||'-'} | Provider: ${state.provider||'-'} | Tempo: ${state.duration_ms==null?'-':state.duration_ms+' ms'}`;$('voice-status').textContent=`Voz: ${state.voice_status||'idle'}`;$('send-button').disabled=state.status==='processing';$('voice-button').disabled=state.status==='processing';$('stop-button').disabled=state.status!=='processing';}catch(error){showError(error)}}setInterval(refresh,700);refresh()</script>"""
+<main><h1>Jarvis Control</h1><p>Painel local de observabilidade</p><div class="panel"><b>Status: </b><span id="status">idle</span><div id="metrics" class="events">Rota: - | Provider: - | Tempo: -</div><div id="voice-status" class="events">Voz: idle</div><br><button id="send-button" type="button">Enviar</button><button id="voice-button" type="button">Voz mock</button><button id="record-button" type="button">Gravar 5s</button><button id="stop-button" type="button" class="stop">Parar</button><button id="clear-button" type="button">Limpar conversa</button><textarea id="message" rows="3" placeholder="Mensagem para o Jarvis"></textarea></div><div class="panel"><h3>Conversa</h3><div id="history" class="value">Nenhuma mensagem ainda.</div></div><div class="grid"><div class="panel"><h3>Transcricao</h3><div id="transcript" class="value">-</div></div><div class="panel"><h3>Resposta</h3><div id="response" class="value">-</div></div></div><div class="panel"><h3>Eventos</h3><div id="events" class="events">-</div></div></main>
+<script>const $=id=>document.getElementById(id);function showError(error){$('events').textContent='Erro no painel: '+error;}$('send-button')?.addEventListener('click',sendMessage);$('voice-button')?.addEventListener('click',sendVoice);$('record-button')?.addEventListener('click',recordVoice);$('stop-button')?.addEventListener('click',stopRun);$('clear-button')?.addEventListener('click',clearConversation);async function sendMessage(){const message=$('message').value.trim();if(!message)return;await post('/api/process',{message})}$('message')?.addEventListener('keydown',event=>{if(event.key==='Enter'&&(event.metaKey||event.ctrlKey)){event.preventDefault();sendMessage()}});async function sendVoice(){const transcript=$('message').value.trim();if(!transcript)return;await post('/api/voice/mock',{transcript})}async function recordVoice(){await post('/api/voice/record',{})}async function post(url,payload){try{const result=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});if(!result.ok)showError((await result.json()).error||'Falha ao processar');$('message').value='';await refresh()}catch(error){showError(error)}}async function stopRun(){try{await fetch('/api/stop',{method:'POST'});await refresh()}catch(error){showError(error)}}async function clearConversation(){try{await fetch('/api/clear',{method:'POST'});await refresh()}catch(error){showError(error)}}async function refresh(){try{const response=await fetch('/api/status',{cache:'no-store'});const state=await response.json();for(const key of ['status','transcript','response','events'])$(key).textContent=key==='events'?state[key].join('\\n')||'-':state[key]||'-';$('history').textContent=state.history?.map(turn=>`${turn.role==='user'?'Voce':'Jarvis'}: ${turn.content}`).join('\\n\\n')||'Nenhuma mensagem ainda.';$('metrics').textContent=`Rota: ${state.route||'-'} | Provider: ${state.provider||'-'} | Tempo: ${state.duration_ms==null?'-':state.duration_ms+' ms'}`;$('voice-status').textContent=`Voz: ${state.voice_status||'idle'}`;$('send-button').disabled=state.status==='processing';$('voice-button').disabled=state.status==='processing';$('record-button').disabled=state.status==='processing';$('stop-button').disabled=state.status!=='processing';}catch(error){showError(error)}}setInterval(refresh,700);refresh()</script>"""
