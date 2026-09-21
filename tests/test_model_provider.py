@@ -34,3 +34,10 @@ class MockModelProviderTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertTrue(switched)
         self.assertEqual(registry.name, "openai")
+
+    def test_registry_routes_provider_by_destination(self) -> None:
+        registry = create_default_model_registry()
+
+        self.assertTrue(registry.set_route("dev", "openai"))
+        self.assertEqual(registry.provider_for("dev").name, "openai")
+        self.assertEqual(registry.provider_for("general").name, "mock")

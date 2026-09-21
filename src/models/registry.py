@@ -6,9 +6,10 @@ from .provider import ModelProvider
 
 
 class ModelRegistry(ModelProvider):
-    def __init__(self, active: str = "mock") -> None:
+    def __init__(self, active: str = "mock", routes: dict[str, str] | None = None) -> None:
         self._providers: dict[str, ModelProvider] = {}
         self._active = active
+        self._routes = routes or {}
 
     @property
     def name(self) -> str:
@@ -30,12 +31,22 @@ class ModelRegistry(ModelProvider):
         self._active = name
         return True
 
+    def set_route(self, destination: str, provider_name: str) -> bool:
+        if provider_name not in self._providers:
+            return False
+        self._routes[destination] = provider_name
+        return True
+
+    def provider_for(self, destination: str) -> ModelProvider:
+        provider_name = self._routes.get(destination, self._active)
+        return self._providers[provider_name]
+
     async def generate(
         self,
         message: str,
         history: list[ConversationMessage],
     ) -> str:
-        return await self._providers[self._active].generate(message, history)
+        return await self.provider_for("default").generate(message, history)
 
 
 def create_default_model_registry() -> ModelRegistry:
