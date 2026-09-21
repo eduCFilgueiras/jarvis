@@ -2,6 +2,9 @@ from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
+from src.security import PermissionPolicy, PermissionRequest
+from src.tools import FilesTool
+
 from .dev_planner import DevTaskPlan
 
 
@@ -45,6 +48,22 @@ class DevExecutionGuard:
         if not self.validate(operation, path):
             return "Operacao bloqueada pela politica de execucao DEV."
         return f"Operacao {operation.value} validada; execucao externa desabilitada."
+
+    async def write_file(
+        self,
+        path: Path,
+        content: str,
+        permissions: PermissionPolicy,
+    ) -> str:
+        if not self.validate(AllowedOperation.INSPECT, path):
+            return "Operacao bloqueada pela politica de execucao DEV."
+        request = PermissionRequest("dev", "write", str(path))
+        decision = permissions.check(request)
+        if not decision.allowed:
+            return f"Permissao pendente: {decision.reason}"
+        return await FilesTool(self._project_root).execute(
+            f"escrever arquivo {path}: {content}"
+        )
 
 
 class DevExecutor:

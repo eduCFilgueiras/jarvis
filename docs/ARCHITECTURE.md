@@ -45,6 +45,9 @@ it does not invoke shell commands or modify files.
 validates paths inside the project, and currently keeps external execution
 disabled.
 
+Controlled file writes use `FilesTool` after an explicit permission decision;
+the DEV executor never invokes a shell.
+
 Agents receive an `AgentContext` containing:
 
 - `tools`
