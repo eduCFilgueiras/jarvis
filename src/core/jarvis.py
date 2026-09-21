@@ -1,6 +1,7 @@
 from src.agents import AgentContext, AgentRegistry, create_default_agent_registry
 from src.core.config import JarvisConfig
 from src.memory import ConversationHistory
+from src.core.orchestrator import Orchestrator
 from src.models import ModelProvider, create_default_model_registry
 from src.router.router import route
 from src.security import PermissionPolicy
@@ -28,13 +29,12 @@ class Jarvis:
 
     async def process_message(self, message: str) -> str:
         self.context.history.add_user_message(message)
-        destination = route(message)
+        result = await Orchestrator(self.agents, self.context).execute(message)
 
         if self.config.debug:
-            print(f"Rota escolhida: {destination}")
+            print(f"Rota escolhida: {result.destination}")
 
-        agent = self.agents.get(destination)
-        response = await agent.execute(message, self.context)
+        response = result.response
         self.context.history.add_assistant_message(response)
         return response
 

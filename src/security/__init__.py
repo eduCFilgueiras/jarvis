@@ -1,3 +1,3 @@
-from .permissions import PermissionDecision, PermissionPolicy, PermissionRequest
+from .permissions import PermissionDecision, PermissionPolicy, PermissionRequest, PermissionStatus
 
-__all__ = ["PermissionDecision", "PermissionPolicy", "PermissionRequest"]
+__all__ = ["PermissionDecision", "PermissionPolicy", "PermissionRequest", "PermissionStatus"]

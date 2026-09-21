@@ -21,6 +21,14 @@ class ToolRegistryTests(unittest.TestCase):
 
         self.assertIsNone(registry.get("missing"))
 
+    def test_tool_specs_expose_metadata(self) -> None:
+        registry = create_default_tool_registry()
+        spec = registry.spec("files")
+
+        self.assertIsNotNone(spec)
+        self.assertEqual(spec.name, "files")
+        self.assertEqual(spec.risk.value, "medium")
+
     def test_default_registry_contains_datetime_tool(self) -> None:
         registry = create_default_tool_registry()
 

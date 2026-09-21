@@ -1,4 +1,5 @@
 from .calculator_tool import CalculatorTool
+from .contracts import ToolHandler, ToolRisk, ToolSpec
 from .datetime_tool import DateTimeTool
 from .files_tool import FilesTool
 from .notes_tool import NotesTool
@@ -7,6 +8,9 @@ from .todo_tool import TodoTool
 
 __all__ = [
     "CalculatorTool",
+    "ToolHandler",
+    "ToolRisk",
+    "ToolSpec",
     "DateTimeTool",
     "FilesTool",
     "NotesTool",
