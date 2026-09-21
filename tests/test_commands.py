@@ -70,25 +70,26 @@ class CommandRouterTests(unittest.TestCase):
         self.assertFalse(should_exit)
 
     def test_memory_write_requires_permission_then_saves(self) -> None:
-        session = create_session()
-        session = CliSession(
-            agents=session.agents,
-            tools=session.tools,
-            history=session.history,
-            model_provider=session.model_provider,
-            config=session.config,
-            permissions=PermissionPolicy(auto_allow_read_only=False),
-            memory=PersistentMemory(Path("/tmp/jarvis-test-memory-write.json")),
-        )
-        router = CommandRouter(session)
+        with TemporaryDirectory() as directory:
+            session = create_session()
+            session = CliSession(
+                agents=session.agents,
+                tools=session.tools,
+                history=session.history,
+                model_provider=session.model_provider,
+                config=session.config,
+                permissions=PermissionPolicy(auto_allow_read_only=False),
+                memory=PersistentMemory(Path(directory) / "memory.json"),
+            )
+            router = CommandRouter(session)
 
-        response, _ = router.handle("/lembrar projeto Jarvis")
-        self.assertIn("Permissao necessaria", response)
-        self.assertEqual(session.memory.all(), [])
+            response, _ = router.handle("/lembrar projeto Jarvis")
+            self.assertIn("Permissao necessaria", response)
+            self.assertEqual(session.memory.all(), [])
 
-        saved = router.confirm_pending()
-        self.assertEqual(saved, "Jarvis: Memoria salva em project.")
-        self.assertEqual(len(session.memory.all()), 1)
+            saved = router.confirm_pending()
+            self.assertEqual(saved, "Jarvis: Memoria salva em project.")
+            self.assertEqual(len(session.memory.all()), 1)
 
     def test_handles_debug_command(self) -> None:
         session = create_session()
