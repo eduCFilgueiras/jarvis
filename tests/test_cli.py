@@ -62,7 +62,7 @@ class CliTests(unittest.IsolatedAsyncioTestCase):
 
         print_mock.assert_any_call(
             "Jarvis: Comandos disponiveis: /ajuda, /historico, /limpar, "
-            "/status, /tools, /agents, /config, /version, /model, /debug on, /debug off, "
+            "/status, /tools, /memoria, /agents, /config, /version, /model, /debug on, /debug off, "
             "/salvar, /carregar, /exportar, /diagnostico, sair, exit, quit, q."
         )
 
