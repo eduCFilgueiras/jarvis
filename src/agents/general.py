@@ -31,7 +31,21 @@ class GeneralAgent(BaseAgent):
                 except ValueError as error:
                     return f"Erro na ferramenta {intent.tool_name}: {error}"
 
-        return await context.model_provider.generate(message, context.history.all())
+        return await context.model_provider.generate(
+            self._with_memory_context(message, context),
+            context.history.all(),
+        )
+
+    def _with_memory_context(self, message: str, context: AgentContext) -> str:
+        if context.memory is None:
+            return message
+        memories = context.memory.all()[:5]
+        if not memories:
+            return message
+        context_lines = "\n".join(
+            f"- {item.category.value}: {item.content}" for item in memories
+        )
+        return f"{message}\n\nMemorias relevantes locais:\n{context_lines}"
 
     def _check_tool_permission(
         self,

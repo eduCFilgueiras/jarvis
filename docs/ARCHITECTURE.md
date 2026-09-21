@@ -92,6 +92,9 @@ The active CLI session keeps an in-memory conversation history.
 Persistent memory is stored separately in `data/memory.json` and supports
 `preference`, `fact`, and `project` categories with simple search.
 
+General responses include at most five local memory items as context when
+available; the complete memory store is never sent to a model request.
+
 History can also be saved and loaded through:
 
 - `/salvar`
