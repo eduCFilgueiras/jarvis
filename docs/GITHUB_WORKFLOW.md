@@ -4,11 +4,12 @@ This project uses GitHub for source control and can use Issues as a lightweight 
 
 ## Branch Flow
 
-1. Create a feature branch from `main`.
-2. Commit focused changes.
-3. Push the branch.
-4. Open a pull request.
-5. Merge after tests pass.
+1. Create or update an issue with goal, scope, and acceptance criteria.
+2. Create a feature branch from `main`, including the issue number when useful.
+3. Commit focused changes.
+4. Push the branch and open a pull request with `Closes #N`.
+5. Run tests and review the diff.
+6. Merge after checks pass; GitHub closes the linked issue automatically.
 
 Example:
 
@@ -58,3 +59,9 @@ The script creates or updates:
 - `priority: high`
 - `priority: medium`
 - `priority: low`
+
+## Continuous Tracking
+
+Issues are the source of truth for planned work. Each implementation branch
+must link to one or more issues, and each pull request must declare its closing
+issue. Use comments on the issue for progress, blockers, and validation notes.
