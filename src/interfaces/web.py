@@ -13,6 +13,7 @@ class ControlState:
         self.transcript = ""
         self.response = ""
         self.events: list[str] = []
+        self.history: list[dict[str, str]] = []
         self.cancel = Event()
         self.lock = Lock()
 
@@ -23,6 +24,7 @@ class ControlState:
                 "transcript": self.transcript,
                 "response": self.response,
                 "events": list(self.events[-20:]),
+                "history": list(self.history[-20:]),
             }
 
     def update(self, status: str, event: str | None = None) -> None:
@@ -30,6 +32,19 @@ class ControlState:
             self.status = status
             if event:
                 self.events.append(event)
+
+    def add_turn(self, role: str, content: str) -> None:
+        with self.lock:
+            self.history.append({"role": role, "content": content})
+
+    def clear(self) -> None:
+        with self.lock:
+            self.status = "idle"
+            self.transcript = ""
+            self.response = ""
+            self.events.clear()
+            self.history.clear()
+            self.cancel.clear()
 
 
 class ControlServer:
@@ -62,6 +77,10 @@ class ControlServer:
                     control.state.update("stopped", "Execucao cancelada pelo usuario")
                     self._json({"ok": True})
                     return
+                if path == "/api/clear":
+                    control.state.clear()
+                    self._json({"ok": True})
+                    return
                 if path != "/api/process":
                     self.send_error(404)
                     return
@@ -74,6 +93,7 @@ class ControlServer:
                 control.state.cancel.clear()
                 control.state.transcript = message
                 control.state.response = ""
+                control.state.add_turn("user", message)
                 control.state.update("processing", f"Processando: {message}")
                 Thread(target=self._process, args=(message,), daemon=True).start()
                 self._json({"ok": True})
@@ -86,6 +106,7 @@ class ControlServer:
                     if control.state.cancel.is_set():
                         return
                     control.state.response = response
+                    control.state.add_turn("assistant", response)
                     control.state.update("idle", "Resposta concluida")
 
                 try:
@@ -118,5 +139,5 @@ class ControlServer:
 _PAGE = """<!doctype html><html lang="pt-BR"><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Jarvis Control</title>
 <style>body{font:16px system-ui;margin:0;background:#101418;color:#edf2f7}main{max-width:860px;margin:auto;padding:28px}.panel{border:1px solid #33404d;border-radius:8px;padding:16px;margin:14px 0;background:#171d23}textarea{width:100%;box-sizing:border-box;background:#0d1115;color:white;padding:10px;border:1px solid #465563;border-radius:6px;font:inherit}button{padding:10px 16px;border:0;border-radius:6px;background:#3c8df6;color:white;font:inherit;margin:10px 8px 0 0}.stop{background:#bd3e4d}.value{white-space:pre-wrap;min-height:48px}.events{white-space:pre-wrap;font:13px monospace;color:#aab6c2}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:650px){.grid{grid-template-columns:1fr}}</style>
-<main><h1>Jarvis Control</h1><p>Painel local de observabilidade</p><div class="panel"><b>Status: </b><span id="status">idle</span><br><button id="send-button" type="button">Enviar</button><button id="stop-button" type="button" class="stop">Parar</button><textarea id="message" rows="3" placeholder="Mensagem para o Jarvis"></textarea></div><div class="grid"><div class="panel"><h3>Transcricao</h3><div id="transcript" class="value">-</div></div><div class="panel"><h3>Resposta</h3><div id="response" class="value">-</div></div></div><div class="panel"><h3>Eventos</h3><div id="events" class="events">-</div></div></main>
-<script>const $=id=>document.getElementById(id);function showError(error){$('events').textContent='Erro no painel: '+error;}$('send-button')?.addEventListener('click',sendMessage);$('stop-button')?.addEventListener('click',stopRun);async function sendMessage(){const message=$('message').value.trim();if(!message)return;try{await fetch('/api/process',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message})});$('message').value='';await refresh();}catch(error){showError(error)}}async function stopRun(){try{await fetch('/api/stop',{method:'POST'});await refresh();}catch(error){showError(error)}}async function refresh(){try{const response=await fetch('/api/status',{cache:'no-store'});const state=await response.json();for(const key of ['status','transcript','response','events'])$(key).textContent=key==='events'?state[key].join('\\n')||'-':state[key]||'-';}catch(error){showError(error)}}setInterval(refresh,700);refresh()</script>"""
+<main><h1>Jarvis Control</h1><p>Painel local de observabilidade</p><div class="panel"><b>Status: </b><span id="status">idle</span><br><button id="send-button" type="button">Enviar</button><button id="stop-button" type="button" class="stop">Parar</button><button id="clear-button" type="button">Limpar conversa</button><textarea id="message" rows="3" placeholder="Mensagem para o Jarvis"></textarea></div><div class="panel"><h3>Conversa</h3><div id="history" class="value">Nenhuma mensagem ainda.</div></div><div class="grid"><div class="panel"><h3>Transcricao</h3><div id="transcript" class="value">-</div></div><div class="panel"><h3>Resposta</h3><div id="response" class="value">-</div></div></div><div class="panel"><h3>Eventos</h3><div id="events" class="events">-</div></div></main>
+<script>const $=id=>document.getElementById(id);function showError(error){$('events').textContent='Erro no painel: '+error;}$('send-button')?.addEventListener('click',sendMessage);$('stop-button')?.addEventListener('click',stopRun);$('clear-button')?.addEventListener('click',clearConversation);async function sendMessage(){const message=$('message').value.trim();if(!message)return;try{await fetch('/api/process',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message})});$('message').value='';await refresh();}catch(error){showError(error)}}async function stopRun(){try{await fetch('/api/stop',{method:'POST'});await refresh();}catch(error){showError(error)}}async function clearConversation(){try{await fetch('/api/clear',{method:'POST'});await refresh();}catch(error){showError(error)}}async function refresh(){try{const response=await fetch('/api/status',{cache:'no-store'});const state=await response.json();for(const key of ['status','transcript','response','events'])$(key).textContent=key==='events'?state[key].join('\\n')||'-':state[key]||'-';$('history').textContent=state.history?.map(turn=>`${turn.role==='user'?'Voce':'Jarvis'}: ${turn.content}`).join('\\n\\n')||'Nenhuma mensagem ainda.';}catch(error){showError(error)}}setInterval(refresh,700);refresh()</script>"""
