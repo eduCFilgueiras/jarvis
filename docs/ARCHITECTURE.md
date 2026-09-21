@@ -110,6 +110,9 @@ selected in configuration and provided with `OPENAI_API_KEY`.
 states so a future audio adapter can implement barge-in without coupling it
 to Jarvis core.
 
+`AudioInput` and `AudioOutput` isolate device access. Mock devices are used by
+default in tests; platform-specific implementations can be added later.
+
 The default history path is `data/history.json`.
 
 ## Environments
