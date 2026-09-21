@@ -1,5 +1,6 @@
 from .base import AgentContext, BaseAgent
 from .dev_planner import DevPlanner
+from .dev_executor import DevExecutor
 from src.security import PermissionRequest
 
 
@@ -11,4 +12,5 @@ class DevAgent(BaseAgent):
         )
         if not decision.allowed:
             return f"{plan.render()} Permissao pendente: {decision.reason}"
-        return f"{plan.render()} Autorizacao recebida; execucao ainda nao iniciada."
+        preview = DevExecutor().prepare(plan)
+        return preview.render()
