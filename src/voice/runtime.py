@@ -1,4 +1,5 @@
 from collections.abc import Awaitable, Callable
+import unicodedata
 
 from .devices import AudioInput, AudioOutput
 from .pipeline import VoiceResult
@@ -11,9 +12,11 @@ class VoiceRuntime:
         audio_input: AudioInput,
         audio_output: AudioOutput,
         process_message: Callable[[str], Awaitable[str]],
+        stop_phrases: tuple[str, ...] = ("sair", "parar", "para", "pare", "encerra", "encerrar"),
     ) -> None:
         self._input = audio_input
         self._output = audio_output
+        self._stop_phrases = {_normalize_phrase(item) for item in stop_phrases}
         self._session = VoiceSession(
             speech_to_text=self._transcribe,
             text_to_speech=self._synthesize,
@@ -22,7 +25,15 @@ class VoiceRuntime:
 
     async def run_once(self) -> VoiceResult:
         audio = await self._input.capture()
-        result = await self._session.handle_audio(audio)
+        transcribe = getattr(self._session._speech_to_text, "transcribe", self._session._speech_to_text)
+        synthesize = getattr(self._session._text_to_speech, "synthesize", self._session._text_to_speech)
+        transcript = await transcribe(audio)
+        if _normalize_phrase(transcript) in self._stop_phrases:
+            response = "Entendido, parando por aqui."
+            output = await synthesize(response)
+            result = VoiceResult(transcript, response, output)
+        else:
+            result = await self._session.handle_transcript(transcript, synthesize=synthesize)
         await self._output.play(result.audio)
         return result
 
@@ -35,3 +46,10 @@ class VoiceRuntime:
         from .providers import OpenAITextToSpeech
 
         return await OpenAITextToSpeech().synthesize(text)
+
+
+def _normalize_phrase(text: str) -> str:
+    normalized = unicodedata.normalize("NFKD", text.lower())
+    normalized = "".join(char for char in normalized if not unicodedata.combining(char))
+    normalized = normalized.replace("jarvis", "").strip(" ,.!?")
+    return " ".join(normalized.split())

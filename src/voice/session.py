@@ -35,6 +35,11 @@ class VoiceSession:
         transcribe = getattr(self._speech_to_text, "transcribe", self._speech_to_text)
         synthesize = getattr(self._text_to_speech, "synthesize", self._text_to_speech)
         transcript = await transcribe(audio)
+        return await self.handle_transcript(transcript, synthesize=synthesize)
+
+    async def handle_transcript(self, transcript: str, synthesize=None) -> VoiceResult:
+        if synthesize is None:
+            synthesize = getattr(self._text_to_speech, "synthesize", self._text_to_speech)
         response = await self._process_message(transcript)
         self._state = VoiceState.SPEAKING
         output = await synthesize(response)
