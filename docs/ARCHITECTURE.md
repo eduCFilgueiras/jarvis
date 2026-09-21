@@ -123,7 +123,8 @@ states so a future audio adapter can implement barge-in without coupling it
 to Jarvis core.
 
 `AudioInput` and `AudioOutput` isolate device access. Mock devices are used by
-default in tests; platform-specific implementations can be added later.
+default in tests; `MacAudioInput` and `MacAudioOutput` use optional
+`sounddevice`/`numpy` adapters when installed.
 
 The default history path is `data/history.json`.
 
