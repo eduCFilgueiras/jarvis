@@ -1,4 +1,15 @@
-DEV_KEYWORDS = ("codigo", "código", "programacao", "programação", "bug", "projeto")
+DEV_KEYWORDS = (
+    "codigo",
+    "código",
+    "programacao",
+    "programação",
+    "bug",
+    "corrigir",
+    "implementar",
+    "alterar arquivo",
+    "escrever arquivo",
+    "executar teste",
+)
 
 
 def route(text: str) -> str:
