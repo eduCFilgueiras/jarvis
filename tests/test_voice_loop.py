@@ -23,3 +23,11 @@ class ContinuousVoiceLoopTests(unittest.IsolatedAsyncioTestCase):
         results = await ContinuousVoiceLoop(FakeRuntime()).run(max_turns=1)
 
         self.assertEqual(len(results), 1)
+
+    async def test_accepts_accented_stop_transcription(self) -> None:
+        runtime = FakeRuntime()
+        runtime.transcripts = iter(["Jarvis Pará"])
+
+        results = await ContinuousVoiceLoop(runtime).run()
+
+        self.assertEqual(len(results), 1)
