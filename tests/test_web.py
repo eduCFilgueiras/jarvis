@@ -22,3 +22,15 @@ class WebControlTests(unittest.TestCase):
         self.assertEqual(len(state.snapshot()["history"]), 2)
         state.clear()
         self.assertEqual(state.snapshot()["history"], [])
+
+    def test_state_records_execution_metadata(self) -> None:
+        state = ControlState()
+        self.assertTrue(state.begin("calcule 2 + 2", "general", "mock"))
+        self.assertFalse(state.begin("outra mensagem", "general", "mock"))
+        state.finish("4", 12.345)
+
+        snapshot = state.snapshot()
+        self.assertEqual(snapshot["status"], "idle")
+        self.assertEqual(snapshot["route"], "general")
+        self.assertEqual(snapshot["provider"], "mock")
+        self.assertEqual(snapshot["duration_ms"], 12.3)
