@@ -41,6 +41,10 @@ requests authorization before any future write executor is added.
 After authorization, `DevExecutor` currently produces a dry-run preview only;
 it does not invoke shell commands or modify files.
 
+`DevExecutionGuard` limits future execution to `inspect`, `test`, and `report`,
+validates paths inside the project, and currently keeps external execution
+disabled.
+
 Agents receive an `AgentContext` containing:
 
 - `tools`
