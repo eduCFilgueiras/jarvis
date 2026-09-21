@@ -28,3 +28,12 @@ class PersistentMemoryTests(unittest.TestCase):
 
             self.assertEqual(len(memory.all()), 1)
             self.assertEqual(memory.all()[0].category, MemoryCategory.PROJECT)
+
+    def test_removes_matching_memories(self) -> None:
+        with TemporaryDirectory() as directory:
+            memory = PersistentMemory(Path(directory) / "memory.json")
+            memory.add(MemoryCategory.FACT, "Mora em Sao Paulo")
+            memory.add(MemoryCategory.FACT, "Gosta de cafe")
+
+            self.assertEqual(memory.remove("sao paulo"), 1)
+            self.assertEqual(len(memory.all()), 1)

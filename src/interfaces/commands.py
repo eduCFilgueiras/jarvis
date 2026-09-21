@@ -4,9 +4,9 @@ from typing import Callable
 
 from src.agents import AgentRegistry
 from src.core.config import JarvisConfig
-from src.memory import ConversationHistory, HistoryStorage, PersistentMemory
+from src.memory import ConversationHistory, HistoryStorage, MemoryCategory, PersistentMemory
 from src.models import ModelProvider
-from src.security import PermissionPolicy
+from src.security import PermissionPolicy, PermissionRequest
 from src.tools import ToolRegistry
 
 EXIT_COMMANDS = {"sair", "exit", "quit", "q"}
@@ -34,15 +34,19 @@ class CommandRouter:
     def __init__(self, session: CliSession) -> None:
         self._session = session
         self._handlers = self._create_handlers()
+        self._pending_action: Callable[[], str] | None = None
 
     def can_handle(self, message: str) -> bool:
         return (
             message.lower() in self._handlers
             or self._is_debug_command(message)
             or self._is_model_command(message)
+            or self._is_memory_write_command(message)
         )
 
     def handle(self, message: str) -> tuple[str, bool]:
+        if self._is_memory_write_command(message):
+            return self._memory_write(message)
         if self._is_debug_command(message):
             return self._debug(message)
 
@@ -86,7 +90,7 @@ class CommandRouter:
     def _help(self) -> tuple[str, bool]:
         return (
             "Jarvis: Comandos disponiveis: /ajuda, /historico, /limpar, "
-            "/status, /tools, /memoria, /agents, /config, /version, /model, /debug on, /debug off, "
+            "/status, /tools, /memoria, /lembrar, /esquecer, /agents, /config, /version, /model, /debug on, /debug off, "
             "/salvar, /carregar, /exportar, /diagnostico, sair, exit, quit, q.",
             False,
         )
@@ -132,6 +136,66 @@ class CommandRouter:
         lines = ["Jarvis: Memoria persistente:"]
         lines.extend(f"- [{item.category.value}] {item.content}" for item in items)
         return "\n".join(lines), False
+
+    def _memory_write(self, message: str) -> tuple[str, bool]:
+        if self._session.memory is None or self._session.permissions is None:
+            return "Jarvis: Memoria ou permissoes indisponiveis nesta sessao.", False
+        if message.lower().startswith("/esquecer "):
+            query = message.split(maxsplit=1)[1].strip()
+            if not query:
+                return "Jarvis: Informe o texto da memoria a remover.", False
+            request = PermissionRequest("memory", "forget", query)
+            decision = self._session.permissions.check(request)
+            if decision.allowed:
+                return self._forget_memory(query), False
+            self._pending_action = lambda: self._forget_memory(query)
+            return f"Jarvis: Permissao necessaria: {decision.reason}", False
+
+        parts = message.split(maxsplit=2)
+        if len(parts) < 3:
+            return "Jarvis: Use /lembrar <preferencia|fato|projeto> <texto>.", False
+        category_map = {
+            "preferencia": MemoryCategory.PREFERENCE,
+            "preference": MemoryCategory.PREFERENCE,
+            "fato": MemoryCategory.FACT,
+            "fact": MemoryCategory.FACT,
+            "projeto": MemoryCategory.PROJECT,
+            "project": MemoryCategory.PROJECT,
+        }
+        category = category_map.get(parts[1].lower())
+        content = parts[2].strip()
+        if category is None or not content:
+            return "Jarvis: Categoria ou texto invalido.", False
+        request = PermissionRequest("memory", "write", f"{category.value}: {content}")
+        decision = self._session.permissions.check(request)
+        if decision.allowed:
+            return self._save_memory(category, content), False
+        self._pending_action = lambda: self._save_memory(category, content)
+        return f"Jarvis: Permissao necessaria: {decision.reason}", False
+
+    def confirm_pending(self) -> str | None:
+        if self._pending_action is None or self._session.permissions is None:
+            return None
+        self._session.permissions.grant_pending()
+        action = self._pending_action
+        self._pending_action = None
+        return action()
+
+    def cancel_pending(self) -> None:
+        self._pending_action = None
+        if self._session.permissions is not None:
+            self._session.permissions.deny_pending()
+
+    def _save_memory(self, category: MemoryCategory, content: str) -> str:
+        self._session.memory.add(category, content)
+        return f"Jarvis: Memoria salva em {category.value}."
+
+    def _forget_memory(self, query: str) -> str:
+        removed = self._session.memory.remove(query)
+        return f"Jarvis: {removed} memoria(s) removida(s)."
+
+    def _is_memory_write_command(self, message: str) -> bool:
+        return message.lower().startswith(("/lembrar ", "/esquecer "))
 
     def _agents(self) -> tuple[str, bool]:
         names = ", ".join(self._session.agents.names())
