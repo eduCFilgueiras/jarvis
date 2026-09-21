@@ -24,6 +24,19 @@ async def run_cli(
         if command_router is not None and command_router.can_handle(message):
             response, should_exit = command_router.handle(message)
             print(response)
+            if session is not None and session.permissions is not None:
+                request = session.permissions.pending_request
+                if request is not None:
+                    answer = input(
+                        f"Jarvis: Permitir {request.tool_name}.{request.action} em "
+                        f"{request.resource}? [s/N] "
+                    ).strip().lower()
+                    if answer in {"s", "sim", "y", "yes"}:
+                        confirmed = command_router.confirm_pending()
+                        if confirmed is not None:
+                            print(confirmed)
+                    else:
+                        command_router.cancel_pending()
             if should_exit:
                 break
             continue

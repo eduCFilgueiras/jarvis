@@ -45,6 +45,13 @@ class PersistentMemory:
             self._items = [item for item in self._items if item.category != category]
         self._save()
 
+    def remove(self, query: str) -> int:
+        normalized = query.lower().strip()
+        previous_count = len(self._items)
+        self._items = [item for item in self._items if normalized not in item.content.lower()]
+        self._save()
+        return previous_count - len(self._items)
+
     def _load(self) -> list[MemoryItem]:
         if not self._path.exists():
             return []
