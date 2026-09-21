@@ -28,6 +28,7 @@ Real files are ignored by Git:
 - `JARVIS_HISTORY_PATH`: JSON history persistence path.
 - `JARVIS_EXPORT_PATH`: Markdown export path.
 - `OPENAI_API_KEY`: optional key for the OpenAI provider.
+- `JARVIS_MODEL_PROVIDER`: `mock` by default or `openai` when configured.
 
 ## Suggested Usage
 
@@ -53,3 +54,6 @@ python3 main.py
 ```
 
 For production-like usage, keep `JARVIS_DEBUG=false`.
+
+When `JARVIS_MODEL_PROVIDER=openai` is requested without `OPENAI_API_KEY`,
+Jarvis falls back to `mock` safely.

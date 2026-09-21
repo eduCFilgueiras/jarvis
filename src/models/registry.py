@@ -1,3 +1,5 @@
+import os
+
 from src.memory import ConversationMessage
 
 from .mock_provider import MockModelProvider
@@ -8,7 +10,8 @@ from .provider import ModelProvider
 class ModelRegistry(ModelProvider):
     def __init__(self, active: str = "mock", routes: dict[str, str] | None = None) -> None:
         self._providers: dict[str, ModelProvider] = {}
-        self._active = active
+        requested = os.environ.get("JARVIS_MODEL_PROVIDER", active)
+        self._active = requested
         self._routes = routes or {}
 
     @property
@@ -17,6 +20,15 @@ class ModelRegistry(ModelProvider):
 
     def register(self, provider: ModelProvider) -> None:
         self._providers[provider.name] = provider
+        if self._active == "openai" and provider.name == "openai":
+            if not getattr(provider, "configured", False):
+                self._active = "mock"
+
+    def status(self) -> dict[str, str]:
+        return {
+            name: "configured" if getattr(provider, "configured", True) else "unconfigured"
+            for name, provider in self._providers.items()
+        }
 
     def names(self) -> list[str]:
         return sorted(self._providers)
