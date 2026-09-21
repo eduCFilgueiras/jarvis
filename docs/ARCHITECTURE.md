@@ -126,6 +126,9 @@ to Jarvis core.
 single controlled turn. Continuous listening remains opt-in and is not started
 by the CLI automatically.
 
+`ContinuousVoiceLoop` provides explicit continuous mode with a configurable
+turn limit and stop phrases (`sair`, `parar`, `encerrar`).
+
 `AudioInput` and `AudioOutput` isolate device access. Mock devices are used by
 default in tests; `MacAudioInput` and `MacAudioOutput` use optional
 `sounddevice`/`numpy` adapters when installed.
