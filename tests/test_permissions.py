@@ -44,3 +44,22 @@ class PermissionPolicyTests(unittest.TestCase):
         decision = policy.check(request)
 
         self.assertFalse(decision.allowed)
+
+    def test_grants_pending_request_once(self) -> None:
+        policy = PermissionPolicy(auto_allow_read_only=False)
+        request = PermissionRequest("files", "list", "listar arquivos")
+
+        self.assertFalse(policy.check(request).allowed)
+        self.assertEqual(policy.pending_request, request)
+        self.assertTrue(policy.grant_pending())
+        self.assertTrue(policy.check(request).allowed)
+        self.assertFalse(policy.check(request).allowed)
+
+    def test_denies_pending_request(self) -> None:
+        policy = PermissionPolicy(auto_allow_read_only=False)
+        request = PermissionRequest("files", "list", "listar arquivos")
+
+        policy.check(request)
+        policy.deny_pending()
+
+        self.assertIsNone(policy.pending_request)
