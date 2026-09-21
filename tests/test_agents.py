@@ -3,6 +3,7 @@ from datetime import datetime
 
 from src.agents.base import AgentContext
 from src.agents.dev import DevAgent
+from src.agents.dev_planner import DevPlanner
 from src.agents.general import GeneralAgent
 from src.memory import ConversationHistory
 from src.models import MockModelProvider
@@ -30,7 +31,14 @@ class AgentTests(unittest.IsolatedAsyncioTestCase):
     async def test_dev_agent_response(self) -> None:
         response = await DevAgent().execute("corrigir bug", self.context)
 
-        self.assertIn('[DEV] Plano inicial para: "corrigir bug"', response)
+        self.assertIn('[DEV] Tarefa: "corrigir bug"', response)
+        self.assertIn("Autorizacao necessaria", response)
+
+    def test_dev_planner_creates_five_step_plan(self) -> None:
+        plan = DevPlanner().create_plan("corrigir bug")
+
+        self.assertEqual(len(plan.steps), 5)
+        self.assertTrue(plan.authorization_required)
 
     async def test_general_agent_response(self) -> None:
         response = await GeneralAgent().execute("bom dia", self.context)

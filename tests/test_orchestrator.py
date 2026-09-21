@@ -22,7 +22,7 @@ class OrchestratorTests(unittest.IsolatedAsyncioTestCase):
         ).execute("tem um bug no projeto")
 
         self.assertEqual(result.destination, "dev")
-        self.assertIn("Plano inicial", result.response)
+        self.assertIn("Plano:", result.response)
 
     async def test_resolves_provider_for_destination(self) -> None:
         models = create_default_model_registry()
@@ -39,4 +39,4 @@ class OrchestratorTests(unittest.IsolatedAsyncioTestCase):
         ).execute("tem um bug no projeto")
 
         self.assertEqual(result.destination, "dev")
-        self.assertIn("Plano inicial", result.response)
+        self.assertIn("Plano:", result.response)
