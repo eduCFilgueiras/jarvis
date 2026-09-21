@@ -18,7 +18,28 @@ class FilesTool:
             target = self._extract_required_path(message, "ler arquivo")
             return self._read_file(target)
 
+        if input_text.startswith("escrever arquivo"):
+            target, content = self._extract_write(message)
+            return self._write_file(target, content)
+
         raise ValueError("Comando de arquivo nao reconhecido.")
+
+    def _extract_write(self, message: str) -> tuple[Path, str]:
+        raw = re.sub(r"^\s*escrever arquivo\b", "", message, flags=re.I).strip()
+        if ":" not in raw:
+            raise ValueError("Use 'escrever arquivo caminho: conteudo'.")
+        path_text, content = raw.split(":", 1)
+        if not path_text.strip() or not content.strip():
+            raise ValueError("Informe caminho e conteudo.")
+        return Path(path_text.strip()), content.lstrip()
+
+    def _write_file(self, path: Path, content: str) -> str:
+        target = self._resolve_safe_path(path)
+        if target.exists() and target.is_dir():
+            return "O caminho informado e um diretorio."
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
+        return f"Arquivo escrito: {path}"
 
     def _extract_optional_path(self, message: str, command: str) -> Path:
         raw_path = re.sub(rf"^\s*{re.escape(command)}\b", "", message, flags=re.I)

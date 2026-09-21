@@ -59,6 +59,7 @@ class IntentRouter:
                 triggers=(
                     "listar arquivos",
                     "ler arquivo",
+                    "escrever arquivo",
                 ),
             ),
             IntentRule(
