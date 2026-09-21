@@ -16,6 +16,7 @@ async def main() -> None:
         model_provider=jarvis.context.model_provider,
         config=jarvis.config,
         permissions=jarvis.context.permissions,
+        memory=jarvis.context.memory,
     )
     await run_cli(process_message, session=session)
 

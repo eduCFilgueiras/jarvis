@@ -4,7 +4,7 @@ from typing import Callable
 
 from src.agents import AgentRegistry
 from src.core.config import JarvisConfig
-from src.memory import ConversationHistory, HistoryStorage
+from src.memory import ConversationHistory, HistoryStorage, PersistentMemory
 from src.models import ModelProvider
 from src.security import PermissionPolicy
 from src.tools import ToolRegistry
@@ -21,6 +21,7 @@ class CliSession:
     model_provider: ModelProvider
     config: JarvisConfig
     permissions: PermissionPolicy | None = None
+    memory: PersistentMemory | None = None
 
 
 @dataclass(frozen=True)
@@ -61,6 +62,7 @@ class CommandRouter:
             CommandRule(aliases=("/limpar", "/clear"), handler=self._clear),
             CommandRule(aliases=("/status",), handler=self._status),
             CommandRule(aliases=("/tools", "/ferramentas"), handler=self._tools),
+            CommandRule(aliases=("/memoria", "/memória", "/memory"), handler=self._memory),
             CommandRule(aliases=("/agents", "/agentes"), handler=self._agents),
             CommandRule(aliases=("/config",), handler=self._config),
             CommandRule(aliases=("/version", "/versao", "/versão"), handler=self._version),
@@ -84,7 +86,7 @@ class CommandRouter:
     def _help(self) -> tuple[str, bool]:
         return (
             "Jarvis: Comandos disponiveis: /ajuda, /historico, /limpar, "
-            "/status, /tools, /agents, /config, /version, /model, /debug on, /debug off, "
+            "/status, /tools, /memoria, /agents, /config, /version, /model, /debug on, /debug off, "
             "/salvar, /carregar, /exportar, /diagnostico, sair, exit, quit, q.",
             False,
         )
@@ -120,6 +122,16 @@ class CommandRouter:
     def _tools(self) -> tuple[str, bool]:
         names = ", ".join(self._session.tools.names())
         return f"Jarvis: Ferramentas disponiveis: {names}.", False
+
+    def _memory(self) -> tuple[str, bool]:
+        if self._session.memory is None:
+            return "Jarvis: Memoria persistente indisponivel nesta sessao.", False
+        items = self._session.memory.all()
+        if not items:
+            return "Jarvis: Nenhuma memoria persistente registrada.", False
+        lines = ["Jarvis: Memoria persistente:"]
+        lines.extend(f"- [{item.category.value}] {item.content}" for item in items)
+        return "\n".join(lines), False
 
     def _agents(self) -> tuple[str, bool]:
         names = ", ".join(self._session.agents.names())

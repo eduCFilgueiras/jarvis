@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 from src.agents import create_default_agent_registry
 from src.core import JarvisConfig
 from src.interfaces import CliSession, CommandRouter, CommandRule
-from src.memory import ConversationHistory
+from src.memory import ConversationHistory, MemoryCategory, PersistentMemory
 from src.models import create_default_model_registry
 from src.tools import create_default_tool_registry
 
@@ -49,6 +49,23 @@ class CommandRouterTests(unittest.TestCase):
             response,
             "Jarvis: Ferramentas disponiveis: calculator, datetime, files, notes, todo.",
         )
+        self.assertFalse(should_exit)
+
+    def test_handles_memory_command(self) -> None:
+        session = create_session()
+        session = CliSession(
+            agents=session.agents,
+            tools=session.tools,
+            history=session.history,
+            model_provider=session.model_provider,
+            config=session.config,
+            memory=PersistentMemory(Path("/tmp/jarvis-test-memory.json")),
+        )
+        session.memory.add(MemoryCategory.PROJECT, "Jarvis")
+
+        response, should_exit = CommandRouter(session).handle("/memoria")
+
+        self.assertIn("[project] Jarvis", response)
         self.assertFalse(should_exit)
 
     def test_handles_debug_command(self) -> None:
