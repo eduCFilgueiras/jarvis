@@ -1,4 +1,5 @@
 from collections.abc import Awaitable, Callable
+import asyncio
 from typing import Protocol
 
 
@@ -24,6 +25,49 @@ class MockAudioOutput:
 
     async def play(self, audio: bytes) -> None:
         self.played.append(audio)
+
+
+class MacAudioInput:
+    def __init__(self, sample_rate: int = 16_000, channels: int = 1, seconds: int = 5) -> None:
+        self.sample_rate = sample_rate
+        self.channels = channels
+        self.seconds = seconds
+
+    async def capture(self) -> bytes:
+        return await self._capture()
+
+    async def _capture(self) -> bytes:
+        try:
+            import sounddevice as sd
+        except ImportError as error:
+            raise RuntimeError("Instale sounddevice para capturar audio no macOS.") from error
+        recording = await asyncio.to_thread(
+            sd.rec,
+            int(self.seconds * self.sample_rate),
+            samplerate=self.sample_rate,
+            channels=self.channels,
+            dtype="int16",
+        )
+        await asyncio.to_thread(sd.wait)
+        return recording.tobytes()
+
+
+class MacAudioOutput:
+    def __init__(self, sample_rate: int = 16_000, channels: int = 1) -> None:
+        self.sample_rate = sample_rate
+        self.channels = channels
+
+    async def play(self, audio: bytes) -> None:
+        try:
+            import numpy as np
+            import sounddevice as sd
+        except ImportError as error:
+            raise RuntimeError("Instale sounddevice e numpy para reproduzir audio no macOS.") from error
+        samples = np.frombuffer(audio, dtype="int16")
+        await asyncio.to_thread(
+            sd.play, samples, self.sample_rate, channels=self.channels
+        )
+        await asyncio.to_thread(sd.wait)
 
 
 async def run_audio_turn(
