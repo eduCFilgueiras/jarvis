@@ -97,6 +97,12 @@ History can also be saved and loaded through:
 - `/salvar`
 - `/carregar`
 
+## Voice
+
+`VoicePipeline` separates speech-to-text, Jarvis message processing, and
+text-to-speech. The current adapters are mocks for testing; real audio
+providers can be added without changing the orchestrator.
+
 The default history path is `data/history.json`.
 
 ## Environments
