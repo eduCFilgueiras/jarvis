@@ -122,6 +122,10 @@ selected in configuration and provided with `OPENAI_API_KEY`.
 states so a future audio adapter can implement barge-in without coupling it
 to Jarvis core.
 
+`VoiceRuntime.run_once()` connects real audio devices to OpenAI STT/TTS for a
+single controlled turn. Continuous listening remains opt-in and is not started
+by the CLI automatically.
+
 `AudioInput` and `AudioOutput` isolate device access. Mock devices are used by
 default in tests; `MacAudioInput` and `MacAudioOutput` use optional
 `sounddevice`/`numpy` adapters when installed.

@@ -1,5 +1,7 @@
 from collections.abc import Awaitable, Callable
 import asyncio
+import io
+import wave
 from typing import Protocol
 
 
@@ -49,7 +51,13 @@ class MacAudioInput:
             dtype="int16",
         )
         await asyncio.to_thread(sd.wait)
-        return recording.tobytes()
+        buffer = io.BytesIO()
+        with wave.open(buffer, "wb") as wav:
+            wav.setnchannels(self.channels)
+            wav.setsampwidth(2)
+            wav.setframerate(self.sample_rate)
+            wav.writeframes(recording.tobytes())
+        return buffer.getvalue()
 
 
 class MacAudioOutput:
@@ -63,9 +71,17 @@ class MacAudioOutput:
             import sounddevice as sd
         except ImportError as error:
             raise RuntimeError("Instale sounddevice e numpy para reproduzir audio no macOS.") from error
-        samples = np.frombuffer(audio, dtype="int16")
+        sample_rate = self.sample_rate
+        channels = self.channels
+        samples_data = audio
+        if audio[:4] == b"RIFF":
+            with wave.open(io.BytesIO(audio), "rb") as wav:
+                sample_rate = wav.getframerate()
+                channels = wav.getnchannels()
+                samples_data = wav.readframes(wav.getnframes())
+        samples = np.frombuffer(samples_data, dtype="int16")
         await asyncio.to_thread(
-            sd.play, samples, self.sample_rate
+            sd.play, samples, sample_rate
         )
         await asyncio.to_thread(sd.wait)
 
