@@ -35,6 +35,9 @@ main.py
 - `general`: handles conversational fallback, history intents, and tool intents.
 - `dev`: placeholder development agent.
 
+The development agent now creates a five-step plan from the project context and
+requests authorization before any future write executor is added.
+
 Agents receive an `AgentContext` containing:
 
 - `tools`

@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from pathlib import Path
 
 from src.memory import ConversationHistory
 from src.models import ModelProvider
@@ -13,6 +14,7 @@ class AgentContext:
     history: ConversationHistory
     model_provider: ModelProvider
     permissions: PermissionPolicy
+    project_root: Path = Path(".")
 
 
 class BaseAgent(ABC):
