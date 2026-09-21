@@ -14,19 +14,20 @@ Jarvis is a local, modular CLI assistant with:
 
 ## Near-Term
 
-1. Add real OpenAI activation flow.
-2. Add safer permission prompts for sensitive tools.
+1. Complete the intelligent orchestrator and model-driven routing.
+2. Turn the DEV planner into an authorized execution agent.
 3. Add a write-capable files tool behind confirmation.
 4. Add a plugin-style loader for external tools and agents.
-5. Add GitHub Issues/Projects workflow for task tracking.
+5. Add real OpenAI activation flow and measure provider cost.
+6. Add GitHub Issues/Projects workflow for task tracking.
 
 ## Mid-Term
 
 1. Add voice input/output.
 2. Add richer memory summaries.
 3. Add scheduled reminders and task due dates.
-4. Add structured tool schemas.
-5. Add model-driven tool selection.
+4. Add persistent memory categories and summaries.
+5. Add structured tool parameters and model-driven tool selection.
 
 ## Later
 

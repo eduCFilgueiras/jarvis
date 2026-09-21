@@ -39,10 +39,7 @@ class GeneralAgent(BaseAgent):
         message: str,
         context: AgentContext,
     ) -> str | None:
-        if tool_name != "files":
-            return None
-
-        action = "read" if message.lower().strip().startswith("ler arquivo") else "list"
+        action = self._tool_action(tool_name, message)
         request = PermissionRequest(
             tool_name=tool_name,
             action=action,
@@ -54,6 +51,20 @@ class GeneralAgent(BaseAgent):
             return None
 
         return f"Permissao negada: {decision.reason}"
+
+    def _tool_action(self, tool_name: str, message: str) -> str:
+        input_text = message.lower().strip()
+        if tool_name == "files":
+            return "read" if input_text.startswith("ler arquivo") else "list"
+        if tool_name == "notes":
+            return "delete" if input_text.startswith("limpar notas") else (
+                "write" if input_text.startswith(("anote", "nota", "crie uma nota")) else "read"
+            )
+        if tool_name == "todo":
+            return "delete" if input_text.startswith("limpar tarefas") else (
+                "write" if input_text.startswith(("criar tarefa", "crie uma tarefa", "tarefa", "concluir tarefa")) else "read"
+            )
+        return "read"
 
     def _format_history(self, context: AgentContext) -> str:
         previous_user_messages = [

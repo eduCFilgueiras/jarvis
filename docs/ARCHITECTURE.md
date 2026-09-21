@@ -9,7 +9,8 @@ main.py
   -> src/interfaces/cli.py
       -> src/interfaces/commands.py
       -> src/core/jarvis.py
-          -> src/router/router.py
+          -> src/core/orchestrator.py
+              -> src/router/router.py
           -> src/agents/registry.py
           -> src/agents/general.py or src/agents/dev.py
               -> src/router/intent_router.py
@@ -39,6 +40,7 @@ Agents receive an `AgentContext` containing:
 - `tools`
 - `history`
 - `model_provider`
+- `permissions`
 
 ## Tools
 
@@ -50,17 +52,20 @@ Current tools:
 - `notes`
 - `todo`
 
-Tools are registered in `ToolRegistry` and invoked by name.
+Tools are registered in `ToolRegistry` with a handler, description, and risk level,
+and remain invokable by name for backwards compatibility.
 
 ## Security
 
-`PermissionPolicy` provides the first permission layer for tools.
+`PermissionPolicy` provides the permission layer for tools.
 
 Current behavior:
 
 - read-only actions are auto-allowed by default.
-- non-read-only actions are denied by default.
-- the `files` tool is checked through the policy before execution.
+- read-only actions are `ALLOW` by default.
+- write actions return `ASK` and can be approved once through the CLI.
+- destructive actions return `DENY`.
+- all state-changing built-in tools are checked through the policy before execution.
 
 ## Models
 

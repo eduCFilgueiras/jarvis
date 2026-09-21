@@ -30,7 +30,7 @@ class AgentTests(unittest.IsolatedAsyncioTestCase):
     async def test_dev_agent_response(self) -> None:
         response = await DevAgent().execute("corrigir bug", self.context)
 
-        self.assertEqual(response, '[DEV] Recebi a tarefa: "corrigir bug"')
+        self.assertIn('[DEV] Plano inicial para: "corrigir bug"', response)
 
     async def test_general_agent_response(self) -> None:
         response = await GeneralAgent().execute("bom dia", self.context)
@@ -70,7 +70,7 @@ class AgentTests(unittest.IsolatedAsyncioTestCase):
 
         response = await GeneralAgent().execute("criar tarefa", context)
 
-        self.assertEqual(response, "Erro na ferramenta todo: Nenhuma tarefa informada.")
+        self.assertIn("Permissao negada: Permissao necessaria para todo.write", response)
 
     async def test_general_agent_summarizes_previous_user_messages(self) -> None:
         history = ConversationHistory()

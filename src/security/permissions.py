@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import StrEnum
 
 
 @dataclass(frozen=True)
@@ -8,10 +9,17 @@ class PermissionRequest:
     resource: str
 
 
+class PermissionStatus(StrEnum):
+    ALLOW = "allow"
+    ASK = "ask"
+    DENY = "deny"
+
+
 @dataclass(frozen=True)
 class PermissionDecision:
     allowed: bool
     reason: str
+    status: PermissionStatus = PermissionStatus.DENY
 
 
 class PermissionPolicy:
@@ -24,18 +32,23 @@ class PermissionPolicy:
     def check(self, request: PermissionRequest) -> PermissionDecision:
         if request in self._granted_requests:
             self._granted_requests.remove(request)
-            return PermissionDecision(allowed=True, reason="permission granted for this request")
+            return PermissionDecision(True, "permission granted for this request", PermissionStatus.ALLOW)
 
         if self._auto_allow_read_only and request.action in self._read_only_actions:
-            return PermissionDecision(allowed=True, reason="read-only action allowed")
+            return PermissionDecision(True, "read-only action allowed", PermissionStatus.ALLOW)
+
+        if request.action == "delete":
+            self._pending_request = None
+            return PermissionDecision(False, "acao destrutiva bloqueada", PermissionStatus.DENY)
 
         self._pending_request = request
         return PermissionDecision(
-            allowed=False,
-            reason=(
+            False,
+            (
                 f"Permissao necessaria para {request.tool_name}."
                 f"{request.action} em {request.resource}."
             ),
+            PermissionStatus.ASK,
         )
 
     @property

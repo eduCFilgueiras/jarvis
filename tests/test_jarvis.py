@@ -16,7 +16,7 @@ class JarvisTests(unittest.IsolatedAsyncioTestCase):
         with patch("builtins.print"):
             response = await process_message("tem um bug no projeto")
 
-        self.assertEqual(response, '[DEV] Recebi a tarefa: "tem um bug no projeto"')
+        self.assertIn('[DEV] Plano inicial para: "tem um bug no projeto"', response)
 
     async def test_process_message_records_history(self) -> None:
         jarvis = Jarvis()
