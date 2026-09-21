@@ -69,6 +69,8 @@ class GeneralAgent(BaseAgent):
     def _tool_action(self, tool_name: str, message: str) -> str:
         input_text = message.lower().strip()
         if tool_name == "files":
+            if input_text.startswith("escrever arquivo"):
+                return "write"
             return "read" if input_text.startswith("ler arquivo") else "list"
         if tool_name == "notes":
             return "delete" if input_text.startswith("limpar notas") else (

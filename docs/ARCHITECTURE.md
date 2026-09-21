@@ -76,6 +76,8 @@ Current behavior:
 - write actions return `ASK` and can be approved once through the CLI.
 - destructive actions return `DENY`.
 - all state-changing built-in tools are checked through the policy before execution.
+- `files` supports controlled writes using `escrever arquivo caminho: conteudo`;
+  writes require confirmation and remain restricted to the configured root.
 
 ## Models
 
