@@ -11,6 +11,10 @@ class OpenAIModelProvider(ModelProvider):
     def __init__(self, model: str = "gpt-5") -> None:
         self._model = model
 
+    @property
+    def configured(self) -> bool:
+        return bool(os.environ.get("OPENAI_API_KEY"))
+
     async def generate(
         self,
         message: str,

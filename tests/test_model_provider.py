@@ -35,6 +35,11 @@ class MockModelProviderTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(switched)
         self.assertEqual(registry.name, "openai")
 
+    def test_registry_falls_back_to_mock_without_openai_key(self) -> None:
+        with patch.dict("os.environ", {"JARVIS_MODEL_PROVIDER": "openai"}, clear=True):
+            registry = create_default_model_registry()
+        self.assertEqual(registry.name, "mock")
+
     def test_registry_routes_provider_by_destination(self) -> None:
         registry = create_default_model_registry()
 
