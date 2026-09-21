@@ -1,6 +1,6 @@
 from src.agents import AgentContext, AgentRegistry, create_default_agent_registry
 from src.core.config import JarvisConfig
-from src.memory import ConversationHistory
+from src.memory import ConversationHistory, PersistentMemory
 from src.core.orchestrator import Orchestrator
 from src.models import ModelProvider, create_default_model_registry
 from src.router.router import route
@@ -17,6 +17,7 @@ class Jarvis:
         model_provider: ModelProvider | None = None,
         permissions: PermissionPolicy | None = None,
         config: JarvisConfig | None = None,
+        memory: PersistentMemory | None = None,
     ) -> None:
         self.agents = agents or create_default_agent_registry()
         self.config = config or JarvisConfig()
@@ -25,6 +26,7 @@ class Jarvis:
             history=history or ConversationHistory(),
             model_provider=model_provider or create_default_model_registry(),
             permissions=permissions or PermissionPolicy(),
+            memory=memory or PersistentMemory(),
         )
 
     async def process_message(self, message: str) -> str:

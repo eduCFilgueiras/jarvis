@@ -89,6 +89,9 @@ specific provider, while retaining the active provider as the fallback.
 
 The active CLI session keeps an in-memory conversation history.
 
+Persistent memory is stored separately in `data/memory.json` and supports
+`preference`, `fact`, and `project` categories with simple search.
+
 History can also be saved and loaded through:
 
 - `/salvar`

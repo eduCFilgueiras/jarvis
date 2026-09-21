@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
 
-from src.memory import ConversationHistory
+from src.memory import ConversationHistory, PersistentMemory
 from src.models import ModelProvider
 from src.security import PermissionPolicy
 from src.tools import ToolRegistry
@@ -15,6 +15,7 @@ class AgentContext:
     model_provider: ModelProvider
     permissions: PermissionPolicy
     project_root: Path = Path(".")
+    memory: PersistentMemory | None = None
 
 
 class BaseAgent(ABC):
