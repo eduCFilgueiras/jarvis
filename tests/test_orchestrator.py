@@ -23,3 +23,20 @@ class OrchestratorTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(result.destination, "dev")
         self.assertIn("Plano inicial", result.response)
+
+    async def test_resolves_provider_for_destination(self) -> None:
+        models = create_default_model_registry()
+        models.set_route("dev", "openai")
+        context = AgentContext(
+            tools=create_default_tool_registry(),
+            history=ConversationHistory(),
+            model_provider=models,
+            permissions=PermissionPolicy(),
+        )
+
+        result = await Orchestrator(
+            create_default_agent_registry(), context
+        ).execute("tem um bug no projeto")
+
+        self.assertEqual(result.destination, "dev")
+        self.assertIn("Plano inicial", result.response)

@@ -76,6 +76,9 @@ Current providers:
 
 The active model can be changed at runtime with `/model <name>`.
 
+`ModelRegistry` can also route a destination such as `general` or `dev` to a
+specific provider, while retaining the active provider as the fallback.
+
 ## Memory
 
 The active CLI session keeps an in-memory conversation history.

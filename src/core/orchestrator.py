@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from src.agents import AgentContext, AgentRegistry
 from src.router.router import route
@@ -18,5 +18,9 @@ class Orchestrator:
     async def execute(self, message: str) -> OrchestrationResult:
         destination = route(message)
         agent = self._agents.get(destination)
-        response = await agent.execute(message, self._context)
+        context = self._context
+        provider_for = getattr(context.model_provider, "provider_for", None)
+        if provider_for is not None:
+            context = replace(context, model_provider=provider_for(destination))
+        response = await agent.execute(message, context)
         return OrchestrationResult(destination, response)
