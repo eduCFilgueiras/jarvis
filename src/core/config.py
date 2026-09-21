@@ -2,6 +2,8 @@ from dataclasses import dataclass, field
 import os
 from pathlib import Path
 
+from src.voice import VoiceConfig
+
 PROJECT_VERSION = "0.1.0"
 
 
@@ -28,3 +30,4 @@ class JarvisConfig:
             os.environ.get("JARVIS_EXPORT_PATH", "data/session.md")
         )
     )
+    voice: VoiceConfig = field(default_factory=VoiceConfig)
