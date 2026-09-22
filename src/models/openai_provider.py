@@ -49,4 +49,14 @@ class OpenAIModelProvider(ModelProvider):
         if not previous_messages or previous_messages[-1]["content"] != message:
             previous_messages.append({"role": "user", "content": message})
 
-        return previous_messages
+        return [
+            {
+                "role": "system",
+                "content": (
+                    "Voce e o Jarvis, um assistente pessoal. Responda sempre em portugues do Brasil. "
+                    "Se o usuario estiver falando por voz, responda em no maximo duas frases curtas. "
+                    "Se a pergunta for simples, responda diretamente e nao explique o fluxo interno."
+                ),
+            },
+            *previous_messages,
+        ]
