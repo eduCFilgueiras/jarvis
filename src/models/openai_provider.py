@@ -31,6 +31,11 @@ class OpenAIModelProvider(ModelProvider):
         client = AsyncOpenAI()
         response = await client.responses.create(
             model=self._model,
+            instructions=(
+                "Voce e o Jarvis, um assistente pessoal. Responda sempre em portugues do Brasil. "
+                "Se o usuario estiver falando por voz, responda em no maximo duas frases curtas. "
+                "Se a pergunta for simples, responda diretamente e nao explique o fluxo interno."
+            ),
             input=self._format_input(message, history),
         )
         return response.output_text
@@ -49,14 +54,4 @@ class OpenAIModelProvider(ModelProvider):
         if not previous_messages or previous_messages[-1]["content"] != message:
             previous_messages.append({"role": "user", "content": message})
 
-        return [
-            {
-                "role": "system",
-                "content": (
-                    "Voce e o Jarvis, um assistente pessoal. Responda sempre em portugues do Brasil. "
-                    "Se o usuario estiver falando por voz, responda em no maximo duas frases curtas. "
-                    "Se a pergunta for simples, responda diretamente e nao explique o fluxo interno."
-                ),
-            },
-            *previous_messages,
-        ]
+        return previous_messages
