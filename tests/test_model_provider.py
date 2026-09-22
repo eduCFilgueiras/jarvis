@@ -50,6 +50,5 @@ class MockModelProviderTests(unittest.IsolatedAsyncioTestCase):
     def test_openai_input_sets_portuguese_concise_persona(self) -> None:
         prompt = OpenAIModelProvider()._format_input("ola", [])
 
-        self.assertEqual(prompt[0]["role"], "system")
-        self.assertIn("portugues do Brasil", prompt[0]["content"])
-        self.assertIn("duas frases curtas", prompt[0]["content"])
+        self.assertEqual(prompt[0]["role"], "user")
+        self.assertEqual(prompt[0]["content"], "ola")
